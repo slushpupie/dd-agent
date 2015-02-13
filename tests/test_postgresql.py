@@ -33,7 +33,7 @@ class TestPostgres(AgentCheckTest):
                         "metrics": {
                             "numbackends": ["custom.numbackends", "Gauge"],
                         },
-                        "query": "SELECT datname, %s FROM pg_stat_database WHERE datname = 'datadog_test' LIMIT(1)", 
+                        "query": "SELECT datname, %s FROM pg_stat_database WHERE datname = 'datadog_test' LIMIT(1)",
                         "relation": False,
                     }
                 ]
@@ -55,29 +55,58 @@ class TestPostgres(AgentCheckTest):
         db = self.check.dbs[key]
 
         metrics = self.check.get_metrics()
-        self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.connections'])               >= 1, pprint(metrics))
-        self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.dead_rows'])                 >= 1, pprint(metrics))
-        self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.live_rows'])                 >= 1, pprint(metrics))
-        self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.table_size'])                >= 1, pprint(metrics))
-        self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.index_size'])                >= 1, pprint(metrics))
-        self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.total_size'])                >= 1, pprint(metrics))
-        self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.max_connections'])           >= 1, pprint(metrics))
-        self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.percent_usage_connections']) >= 1, pprint(metrics))
-        self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.total_tables'])              >= 1, pprint(metrics))
-        self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.db.count']) == 1, pprint(metrics))
-        # Don't test for locks
-        # self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.locks'])              >= 1, pprint(metrics))
-        # Brittle tests
-        # self.assertTrue(4 <= len(metrics) <= 6, metrics)
-        # self.assertTrue(4 <= len([m for m in metrics if 'db:datadog_test' in str(m[3]['tags']) ]) <= 5, pprint(metrics))
-        # self.assertTrue(len([m for m in metrics if 'table:persons' in str(m[3]['tags'])]) == 2, pprint(metrics))
+        self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.connections'])                          >= 1, pprint(metrics))
+        self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.dead_rows'])                            >= 1, pprint(metrics))
+        self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.live_rows'])                            >= 1, pprint(metrics))
+        self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.table_size'])                           >= 1, pprint(metrics))
+        self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.index_size'])                           >= 1, pprint(metrics))
+        self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.total_size'])                           >= 1, pprint(metrics))
+        self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.max_connections'])                      >= 1, pprint(metrics))
+        self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.percent_usage_connections'])            >= 1, pprint(metrics))
+        self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.total_tables'])                         >= 1, pprint(metrics))
+        self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.db.count'])                             == 1, pprint(metrics))
+        self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.total_tables'])                         == 1, pprint(metrics))
 
         # Rate metrics, need 2 collection rounds
         time.sleep(1)
         self.check.run()
         metrics = self.check.get_metrics()
 
-        exp_metrics = 39
+        self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.bgwriter.checkpoints_timed'])           >= 1, pprint(metrics))
+        self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.bgwriter.checkpoints_requested'])       >= 1, pprint(metrics))
+        self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.bgwriter.buffers_checkpoint'])          >= 1, pprint(metrics))
+        self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.bgwriter.buffers_clean'])               >= 1, pprint(metrics))
+        self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.bgwriter.maxwritten_clean'])            >= 1, pprint(metrics))
+        self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.bgwriter.buffers_backend'])             >= 1, pprint(metrics))
+        self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.bgwriter.buffers_alloc'])               >= 1, pprint(metrics))
+
+        self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.commits'])                              >= 1, pprint(metrics))
+        self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.rollbacks'])                            >= 1, pprint(metrics))
+        self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.disk_read'])                            >= 1, pprint(metrics))
+        self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.buffer_hit'])                           >= 1, pprint(metrics))
+        self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.rows_returned'])                        >= 1, pprint(metrics))
+        self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.rows_fetched'])                         >= 1, pprint(metrics))
+        self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.rows_inserted'])                        >= 1, pprint(metrics))
+        self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.rows_updated'])                         >= 1, pprint(metrics))
+        self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.rows_deleted'])                         >= 1, pprint(metrics))
+
+        self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.seq_scans'])                            >= 1, pprint(metrics))
+        self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.seq_rows_read'])                        >= 1, pprint(metrics))
+        self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.rows_hot_updated'])                     >= 1, pprint(metrics))
+
+        if self.check._is_9_1_or_above(key, db):
+            self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.bgwriter.buffers_backend_fsync'])   >= 1, pprint(metrics))
+
+        if self.check._is_9_2_or_above(key, db):
+            self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.bgwriter.write_time'])              >= 1, pprint(metrics))
+            self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.bgwriter.sync_time'])               >= 1, pprint(metrics))
+            self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.deadlocks'])                        >= 1, pprint(metrics))
+            self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.temp_bytes'])                       >= 1, pprint(metrics))
+            self.assertTrue(len([m for m in metrics if m[0] == u'postgresql.temp_files'])                       >= 1, pprint(metrics))
+
+        # FIXME dorian: Not sure it is accurate to check the payload length since there is some duplicated
+        # metrics (rows_updated and rows_deleted)
+        exp_metrics = 40
         exp_db_tagged_metrics = 26
 
         if self.check._is_9_2_or_above(key, db):
