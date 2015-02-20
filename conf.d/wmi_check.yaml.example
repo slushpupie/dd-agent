@@ -39,7 +39,7 @@ instances:
   # `constant_tags` optionally lets you tag each metric with a set of fixed values
   #
   # `link_tag` optionally specifies how to join to another property for tagging.
-  # Settings this will cause any instance number to be removed from tag_by values
+  # Setting this will cause any instance number to be removed from tag_by values
   # i.e. name:process#1 => name:process
   # Params are:
   #   property of source that contains the link value
@@ -81,6 +81,6 @@ instances:
       - [IOWriteBytesPerSec, proc.io.bytes_written, gauge]
     tag_by: Name
     constant_tags:
-        -   'role:test'
-        -   allapps
+      - 'role:test'
+      - allapps
     link_tag: [IDProcess, Win32_Process, Handle, CommandLine]
