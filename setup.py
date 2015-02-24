@@ -1,5 +1,7 @@
 import platform
 import sys
+from datetime import date
+import os
 from config import get_version
 from jmxfetch import JMX_FETCH_JAR_NAME
 
@@ -24,6 +26,9 @@ setup_requires = [
 # Prereqs of the install. Will install when deploying the egg.
 install_requires=[
 ]
+
+# plist (used only on mac)
+plist = None
 
 if sys.platform == 'win32':
     from glob import glob
@@ -123,6 +128,28 @@ if sys.platform == 'win32':
             ('gohai', [r'gohai\gohai.exe'])
         ],
     }
+
+elif sys.platform == 'darwin':
+    from plistlib import Plist
+    plist = Plist.fromFile(os.path.dirname(os.path.realpath(__file__)) + '/packaging/Info.plist')
+    plist.update(dict(
+        CFBundleGetInfoString="{0}, Copyright (c) 2009-{1}, Datadog Inc.".format(get_version(), date.today().year),
+        CFBundleVersion=get_version()
+    ))
+
+    include_modules = ['supervisor']
+    extra_args = {
+        'app': ['gui.py', 'agent.py', 'ddagent.py', 'dogstatsd.py'],
+        'data_files': ['status.html'],
+        'options': {
+            'py2app': {
+                'optimize': 0,
+                'includes': ','.join(include_modules),
+                'plist': plist
+            }
+        }
+    }
+
 
 setup(
     name='datadog-agent',
