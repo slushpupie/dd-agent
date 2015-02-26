@@ -34,6 +34,7 @@ namespace :ci do
       sh %(cp $TRAVIS_BUILD_DIR/ci/resources/pgbouncer/users.txt\
            #{pgb_rootdir}/users.txt)
       sh %(#{pgb_rootdir}/pgbouncer -d #{pgb_rootdir}/pgbouncer.ini)
+      sleep_for 3
       sh %(PGPASSWORD=datadog #{pg_rootdir}/bin/psql\
            -h localhost -p 15433 -U datadog -w\
            -c "SELECT * FROM persons"\
